@@ -15,7 +15,11 @@ Description:
 kerneld-x64.sys IOCTL 0x80112138 maps an Intel PCI memory BAR with MmMapIoSpace and copies that range to a caller-supplied pointer. The caller chooses the PCI device, the copy length, and the destination. The source bytes come from the device BAR, not from the caller. The mapped address is that BAR plus a short offset, not an arbitrary physical page.
 
 Access:
-Tested on 2026-10-22 on an isolated Windows 10 virtual machine. An administrator loaded the driver (service AidaX64) and sent IOCTL 0x80112138. Who else can open \\.\AIDA64Driver on this file was not measured. Loading the driver still requires an administrator.
+Tested on 2026-10-22 on an isolated Windows 10 virtual machine. An administrator loaded the driver (service AidaX64). Local account aida-low, which is not in Administrators, then opened \\.\AIDA64Driver and sent IOCTL 0x80112138. The device security descriptor grants Everyone (WD) access mask 0x1201bf:
+
+O:BAG:SYD:(A;;0x1201bf;;;WD)(A;;FA;;;SY)(A;;FA;;;BA)(A;;0x1200a9;;;RC)S:AI(ML;;NW;;;LW)
+
+Loading the driver still requires an administrator. Sending this IOCTL does not.
 
 Read-back:
 On 2026-10-22 the same Intel device pci 3:0.0, configuration register 0x10, was used twice. Two caller buffers were filled with 0xA5. The first call copied 16 bytes into buffer A. The second call copied 32 bytes into buffer B. A changed only in the first 16 bytes (starting 48 02 10 40) and stayed 0xA5 after that. B matched A in the first 16 bytes, changed in bytes 16-31, and stayed 0xA5 after byte 32.
